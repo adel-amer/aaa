@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>رسالة ليكي</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#171433;--bg2:#2a1d4a;--ink:#fdf3f0;--soft:#cdbfe0;--rose:#f2849e;--gold:#e9c46a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171433;--bg2:#2a1d4a;--ink:#fdf3f0;--soft:#cdbfe0;--rose:#f2849e;--gold:#e9c46a}}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#fff3f1;--bg2:#ffdbe3;--ink:#3a1f2e;--soft:#7a5568;--rose:#c2456b;--gold:#b07d1a}}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:radial-gradient(120% 90% at 50% 0%,var(--bg2),var(--bg) 70%);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;overflow:hidden}
+#stage{height:100%;min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 28px;position:relative}
+.heart{position:fixed;bottom:-40px;color:var(--rose);opacity:.35;animation:up linear forwards;pointer-events:none;z-index:0}
+@keyframes up{to{transform:translateY(-110vh) rotate(25deg);opacity:0}}
+#line{font-family:'Amiri',serif;font-size:clamp(28px,6.5vw,52px);line-height:1.7;max-width:640px;min-height:6.5em;display:flex;align-items:center;justify-content:center;margin:0;position:relative;z-index:1;transition:opacity .7s}
+#line.out{opacity:0}
+button{font-family:inherit;font-size:18px;cursor:pointer;border:0;border-radius:999px;padding:12px 30px;position:relative;z-index:2}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#next{background:transparent;color:var(--gold);border:1.5px solid var(--gold);margin-top:28px}
+#next:hover{background:var(--gold);color:var(--bg)}
+#dots{margin-top:22px;color:var(--soft);font-size:14px;position:relative;z-index:1;min-height:1.5em}
+#ask{display:none;flex-direction:column;align-items:center;position:relative;z-index:1}
+#ask h1{font-family:'Amiri',serif;font-size:clamp(32px,8vw,60px);line-height:1.6;margin:0 0 8px;max-width:640px}
+#ask p{color:var(--soft);margin:0 0 30px;font-size:17px}
+.row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+#yes{background:var(--rose);color:#fff;font-weight:600;font-size:20px;padding:14px 38px}
+#yes:hover{transform:scale(1.06)}
+#no{background:transparent;color:var(--soft);border:1.5px solid var(--soft);transition:left .25s,top .25s}
+#done{display:none;position:relative;z-index:1;max-width:620px}
+#done h1{font-family:'Amiri',serif;font-size:clamp(34px,8vw,60px);margin:0 0 16px;line-height:1.5}
+#done p{font-size:20px;line-height:1.9;color:var(--soft);margin:0}
+.c{position:fixed;top:-30px;font-size:22px;animation:fall linear forwards;z-index:3;pointer-events:none}
+@keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.heart,.c{display:none}#line{transition:none}}
+</style>
+</head>
+<body>
+<main id="stage">
+  <p id="line"></p>
+  <button id="next" type="button">ابدأ</button>
+  <div id="dots"></div>
+
+  <section id="ask">
+    <h1 id="q"></h1>
+    <p>اختاري بقلبك</p>
+    <div class="row">
+      <button id="yes" type="button">أيوه، موافقة</button>
+      <button id="no" type="button">لأ</button>
+    </div>
+  </section>
+
+  <section id="done">
+    <h1>ألف ألف مبروك لقلبي</h1>
+    <p id="doneText"></p>
+  </section>
+</main>
+
+<script>
+/* ✏️ عدّل الأسماء والكلام هنا */
+const HER = 'حبيبتي';
+const HIM = 'من اللي بيحبك';
+const LINES = [
+  'أهلاً يا ' + HER,
+  'مش عارف أبدأ منين، بس هقولك اللي في قلبي زي ما هو',
+  'من يوم ما عرفتك وأنا بلاقي نفسي بفكر فيكي من غير ما أقصد',
+  'بقيت أستنى أكلمك، وبفرح لما أشوف اسمك قدامي',
+  'بحب هدوءك، وبحب طريقتك في الكلام',
+  'ومش بس بحبك، أنا كمان بحترمك وبقدّرك',
+  'وعايزك تبقي جزء من كل أيامي الجاية',
+  'عارف إني مش كامل، بس أوعدك أحاول أبقى سند ليكي وأخلّي بالي منك',
+  'مش عايز حبي يفضل كلام على الموبايل، عايزه يبقى بيت وأسرة بالحلال',
+  'عشان كده عايز أجي أطلبك من أهلك بنفسي',
+  'بس قبل أي حاجة، كان لازم أسمع رأيك إنتي'
+];
+const QUESTION = 'تسمحيلي أتقدملك؟';
+const DONE = 'أنا أسعد إنسان النهارده. هكلم أهلك وأجي بإذن الله في أقرب وقت. شكراً إنك بتحبيني. — ' + HIM;
+
+/* 🎵 اكتب هنا اسم ملف الأغنية (حطه جنب الملف ده)، مثال: 'song.mp3' */
+const SONG = '';
+let audio = null;
+
+const $ = id => document.getElementById(id);
+let i = -1, busy = false;
+
+function floatHeart(){
+  if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const h = document.createElement('span');
+  h.className = 'heart';
+  h.textContent = '♥';
+  h.style.left = Math.random()*100 + 'vw';
+  h.style.fontSize = (14 + Math.random()*26) + 'px';
+  h.style.animationDuration = (7 + Math.random()*7) + 's';
+  document.body.appendChild(h);
+  setTimeout(() => h.remove(), 15000);
+}
+setInterval(floatHeart, 900);
+
+function show(text, cb){
+  busy = true;
+  $('line').classList.add('out');
+  setTimeout(() => {
+    $('line').textContent = text;
+    $('line').classList.remove('out');
+    busy = false;
+    if (cb) cb();
+  }, 600);
+}
+
+$('next').onclick = () => {
+  if (busy) return;
+  if (SONG && !audio){
+    audio = new Audio(SONG);
+    audio.loop = true;
+    audio.volume = 0.6;
+    audio.play().catch(() => {});
+  }
+  i++;
+  if (i < LINES.length){
+    show(LINES[i]);
+    $('next').textContent = i === LINES.length - 1 ? 'كمّل' : 'التالي';
+    $('dots').textContent = (i + 1) + ' / ' + LINES.length;
+  } else {
+    $('line').style.display = 'none';
+    $('next').style.display = 'none';
+    $('dots').style.display = 'none';
+    $('q').textContent = QUESTION;
+    $('ask').style.display = 'flex';
+  }
+};
+
+/* زرار "لأ" بيهرب */
+let tries = 0;
+const NO_TEXTS = ['لأ', 'متأكدة؟', 'فكّري تاني', 'بالله عليكي', 'الزرار ده بيهرب منك'];
+function dodge(e){
+  e.preventDefault();
+  const b = $('no');
+  tries++;
+  b.textContent = NO_TEXTS[Math.min(tries, NO_TEXTS.length - 1)];
+  b.style.position = 'fixed';
+  const w = b.offsetWidth, h = b.offsetHeight;
+  b.style.left = Math.max(8, Math.random()*(innerWidth - w - 16)) + 'px';
+  b.style.top = Math.max(8, Math.random()*(innerHeight - h - 16)) + 'px';
+  $('yes').style.transform = 'scale(' + Math.min(1 + tries*0.08, 1.5) + ')';
+}
+$('no').addEventListener('mouseenter', dodge);
+$('no').addEventListener('touchstart', dodge, {passive:false});
+$('no').addEventListener('click', dodge);
+
+$('yes').onclick = () => {
+  $('ask').style.display = 'none';
+  $('no').style.display = 'none';
+  $('doneText').textContent = DONE;
+  $('done').style.display = 'block';
+  const em = ['♥','💖','🌹','✨','💍'];
+  for (let k = 0; k < 50; k++){
+    const c = document.createElement('span');
+    c.className = 'c';
+    c.textContent = em[k % em.length];
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.animationDuration = (3 + Math.random()*3) + 's';
+    c.style.animationDelay = (Math.random()*2) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 9000);
+  }
+};
+</script>
+</body>
+</html>
